@@ -1,0 +1,56 @@
+includes:
+  - datasets.yaml
+  - setup.yaml
+
+assertion:
+  - http_status_code
+  - valid_json
+  - contains_text
+  - contains_field
+  - contains_dict
+  - matches
+
+testsuite:
+  description: post API Test
+  variables:
+    - api: /post
+  setup: 
+    - all_tokens
+  teardown:
+    - logout()
+
+  testcases:
+    - name: Create post Success - HTTP 201
+      request:
+        method: post
+        data: ds_file_exception_code_201
+      expect:
+        - http_status_code: 201
+        - valid_json
+        - contains_text: ['create success', 'id=2000']
+
+    - name: Create post failed - HTTP 401
+      request:
+        method: post
+        data: ds_file_exception_code_401
+      expect:
+        - http_status_code: 200
+        - contains_dict: {'err_msg': "not a vaild number"}
+
+    # - name: Update a post success - HTTP 201
+    #   request:
+    #     method: put
+    #     data: data_set_3
+    #   expect:
+    #     - http_201
+    #     - valid_json
+    #     - contains: ['string1', 'str2']
+
+    # - name: pet API Delete success - HTTP 201
+    #   request:
+    #     method: delete
+    #     data: data_set_4
+    #   expect:
+    #     - http_201
+    #     - valid_json
+    #     - contains_text: ['deleted']

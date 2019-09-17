@@ -1,7 +1,6 @@
 import pathlib
-from src.testsuite_parser import TestCase
 import pytest
-import testsuite_parser as parser
+import parser
 import code
 
 TEMPLATE_DIR = pathlib.Path(__file__).resolve().parent.parent

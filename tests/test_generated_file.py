@@ -1,6 +1,6 @@
 
 from assertion import http_status_code, contains_text, valid_json
-from testrunner import do_send
+from actions import do_send
 
 def test_create_post_success_http_201():
     data = ''

@@ -1,5 +1,6 @@
 import json
 from typing import List, Dict
+import pathlib
 from ruamel.yaml import YAML
 from code import PytestCodeBuilder
 
@@ -27,43 +28,60 @@ class TestSuites:
         return list()
 
 class TestSuite:
-    def __init__(self, test_suite_file=None, env='qa', format='yaml'):
+    def __init__(self, test_suite_file=None, env='dev', format='yaml'):
         self._test_description_file = None
+        self._test_suite_folder = pathlib.Path(test_suite_file).resolve().parent
         if test_suite_file:
             self._test_description_file = yaml2dict(test_suite_file)
         self._env = env
+        self.variables = dict()
 
-        self.assertion = self._test_description_file['assertion']
-        self.includes = self._test_description_file['includes']
-        self._test_suite = self._test_description_file['testsuite']
+        self.assertions = self._test_description_file.get('assertions', None)
+        self.actions = self._test_description_file.get('actions', None)
+        self.includes = self._test_description_file.get('includes', None)
 
-        self.description = self._test_suite['description']
+        # update included variables
+        if self.includes:
+            self.do_includes()
+        self._test_suite = self._test_description_file.get('testsuite', None)
+
+        # update test file variables
+        self.variables.update(self._test_description_file.get('variables', {}))
+
+        self.description = self._test_suite.get('description', None)
         self.setup = self._test_suite['setup']
-        self.teardown = self._test_suite['teardown']
-        self.variables = self._test_suite['variables']
-        
+        self.teardown = self._test_suite.get('teardown', None)
+
+        # update test suite variables
+        self.variables.update(self._test_suite.get('variables', {}))
+
         self.code = PytestCodeBuilder()
 
-        self.testcases = list()
-        self.add_description()
-        self.add_assertion_functions()
-        for t in self._test_suite['testcases']:
-            _tc = TestCase(t, self.code)
-            _tc.make()
-            self.testcases.append(_tc)
-        # print(self.code)
+    def make(self):
+        self.prepare_testsuite()
+        self.collect_testcases()
+
+    def prepare_testsuite(self):
+        self.code.add_docstring(self.description)
+        self.code.add_from_import('assertions', self.assertions)
+        self.code.add_from_import('actions', self.actions)
+        
+        if self.variables:
+            self.code.add_variables(self.variables)
+
+    def collect_testcases(self):
+        for testcase in self._test_suite['testcases']:
+            t = TestCase(testcase, self.code)
+            t.make()
 
     def __str__(self):
-        return f"<testsuite>: {self._test_suite}, <env>: {self._env}, <testcases>: {self.testcases}"
+        return f"<testsuite>: {self._test_suite}, <env>: {self._env}"
 
-    def do_includes(self, filename):
-        pass
-
-    def add_description(self):
-        self.code.add_docstring(self.description)
-    
-    def add_assertion_functions(self):
-        self.code.add_from_import('assertion', self.assertion)
+    def do_includes(self):
+        for f in self.includes:
+            includ_file = f"{self._test_suite_folder}/{f}"
+            read_content = yaml2dict(includ_file)
+            self.variables.update(read_content[self._env]['variables'])
 
     def do_setup(self, setup):
         pass
@@ -71,22 +89,15 @@ class TestSuite:
     def do_teardown(self, teardown):
         pass
 
-    def collect(self):
-        for testcase in self._test_suite['testcases']:
-            t = TestCase(testcase, self.code)
-            t.make()
-            print(self.code)
-            self.testcases.append(t)
-            print(self.testcases)
-
 
 class TestCase:
     def __init__(self, testcase, code):
         self._tc = testcase
         self.name = self._to_pytest_name()
-        self.action = self._tc['request']
-        self.expect = self._tc['expect']
-        self._code = code
+        self.do = self._tc.get('do')
+        self.expect = self._tc.get('expect')
+
+        self.code = code
 
     def _to_pytest_name(self):
         name = self._tc['name'].lower()
@@ -95,15 +106,13 @@ class TestCase:
         return f"test_{name}"
     
     def make(self):
-        self._code.add_func(self.name, [])
-        self._code.add_action('do_send', [self.action['method'], 'url',self.action['data']])
-        self._code.add_expects()
-        for assert_stmt in self.expect:
-            if isinstance(assert_stmt, dict):
-                for k,v in assert_stmt.items():
-                    self._code.add_line(f"{k}(response, {v})")
-            else:
-                self._code.add_line(f"{assert_stmt}(response)")
-        self._code.dedent()
-        self._code.dedent()
-        self._code.add_blank_line()
+        self.code.add_func(self.name, [])
+        if isinstance(self.do, dict):
+            self.action = self.do.pop('action', 'request')
+            self.code.add_test_step(self.action, (f"{k}={v}" for k,v in self.do.items()))
+        elif isinstance(self.do, list):
+            for do in self.do:
+                _action = do.pop('action', 'request')
+                self.code.add_test_step(_action, (f"{k}={v}" for k,v in do.items()))
+        self.code.add_test_expects(self.expect)
+        self.code.add_blank_line()

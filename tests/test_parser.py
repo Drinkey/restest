@@ -13,14 +13,16 @@ def test_parse_testsuite_0000_sample():
 def test_test_suite_parse_init_one_param_no_exception():
     sample = f"{TEMPLATE_DIR}/sample/0000-test-suite-jsonplaceholder.yaml"
     ts = parser.TestSuite(test_suite_file=sample)
-    print(ts)
+    ts.make()
+    print(ts.code)
 
 def test_test_case_make():
     codeobj = code.PytestCodeBuilder()
     testcase = {
                     'name': 'Create post Success - HTTP 201', 
-                    'request': 
+                    'do': 
                     {
+                        'action': 'request',
                         'method': 'post', 
                         'data': 'ds_file_exception_code_201'
                     }, 
@@ -33,6 +35,6 @@ def test_test_case_make():
                 }
     tc = parser.TestCase(testcase, codeobj)
     tc.make()
-    print(tc._code)
-    assert 'def test_create_post' in str(tc._code)
-    assert 'http_status_code(response, 201)' in str(tc._code)
+    print(tc.code)
+    assert 'def test_create_post' in str(tc.code)
+    assert 'http_status_code(response, 201)' in str(tc.code)

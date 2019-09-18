@@ -52,6 +52,7 @@ class PythonCodeBuilder(CodeBuilder):
 
     def add_variables(self, variables: Dict) -> None:
         for k,v in variables.items():
+            k = k.replace('-', '_')
             if '{' in v and '}' in v:
                 self.add_line(f"{k} = f{repr(v)}")
             else:
@@ -63,15 +64,14 @@ class PytestCodeBuilder(PythonCodeBuilder):
         PythonCodeBuilder.__init__(self, indent)
 
     def add_test_step(self, func_name: str, param: List) -> None:
-        self.add_line(f"responses = {func_name}({', '.join(param)})")
+        self.add_line(f"response = {func_name}({', '.join(param)})")
 
     def add_test_expects(self, expects: Iterable) -> None:
-        self.add_for_loop('response', 'responses')
+        print(expects)
         for assert_stmt in expects:
             if isinstance(assert_stmt, dict):
                 for k,v in assert_stmt.items():
                     self.add_line(f"{k}(response, {v})")
             else:
                 self.add_line(f"{assert_stmt}(response)")
-        self.dedent()
-        self.dedent()
+        # self.dedent()

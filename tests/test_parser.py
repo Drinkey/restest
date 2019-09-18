@@ -20,19 +20,20 @@ def test_test_case_make():
     codeobj = code.PytestCodeBuilder()
     testcase = {
                     'name': 'Create post Success - HTTP 201', 
-                    'do': 
-                    {
-                        'action': 'request',
-                        'method': 'post', 
-                        'data': 'ds_file_exception_code_201'
-                    }, 
-                    'expect': 
-                    [
-                        {'http_status_code': 201}, 
-                        'valid_json', 
-                        {'contains_text': ['create success', 'id=2000']}
+                    'do': [
+                        {
+                            'action': 'request',
+                            'method': 'post', 
+                            'data': 'ds_file_exception_code_201',
+                            'expect': 
+                            [
+                                {'http_status_code': 201}, 
+                                'valid_json', 
+                                {'contains_text': ['create success', 'id=2000']}
+                            ]
+                        }
                     ]
-                }
+    }
     tc = parser.TestCase(testcase, codeobj)
     tc.make()
     print(tc.code)

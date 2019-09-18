@@ -95,7 +95,8 @@ class TestCase:
         self._tc = testcase
         self.name = self._to_pytest_name()
         self.do = self._tc.get('do')
-        self.expect = self._tc.get('expect')
+        self.expect = self._tc.get('expect', None)
+        self.variables = self._tc.get('variables', None)
 
         self.code = code
 
@@ -104,15 +105,19 @@ class TestCase:
         for sep in [' ', '-', '_']:
             name = name.replace(sep, '_')
         return f"test_{name}"
-    
+
     def make(self):
         self.code.add_func(self.name, [])
-        if isinstance(self.do, dict):
-            self.action = self.do.pop('action', 'request')
-            self.code.add_test_step(self.action, (f"{k}={v}" for k,v in self.do.items()))
-        elif isinstance(self.do, list):
-            for do in self.do:
-                _action = do.pop('action', 'request')
-                self.code.add_test_step(_action, (f"{k}={v}" for k,v in do.items()))
-        self.code.add_test_expects(self.expect)
+        if self.variables:
+            self.code.add_variables(self.variables)
+        if not isinstance(self.do, list):
+            raise SyntaxError
+
+        for do in self.do:
+            _action = do.pop('action', 'request')
+            _expects = do.pop('expect', None)
+            self.code.add_test_step(_action, (f"{k}={v}" for k,v in do.items()))
+            if _expects:
+                self.code.add_test_expects(_expects)
+        self.code.dedent()
         self.code.add_blank_line()

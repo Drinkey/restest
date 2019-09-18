@@ -17,55 +17,59 @@ actions:
 
 variables:
   url: "{base_url}/post"
+  get: "get"
+  post: "post"
 
 testsuite:
-  description: post API Test
+  description: Test jsonplaceholder Resources CRUD
+  variables:
+    url: "{base_url}/posts"
   setup: 
     - all_tokens
   teardown:
     - logout()
 
   testcases:
-    - name: Create post Success - HTTP 201
+    - name: List all posts
       do:
-        method: post
-        url: url
-        dataset: ds_file_exception_code_201
-      expect:
-        - http_status_code: 201
-        - valid_json
-        - contains_text: ['create success', 'id=2000']
+        - method: get
+          url: url
+          expect:
+            - http_status_code: 200
+            - valid_json
 
-    - name: Create post failed - HTTP 401
+    - name: Get a post with id 1
       variables:
-        - api: /post
+        url: "{base_url}/posts/1"
       do:
-        - action: readfile
-          path: /etc/sshd_config
+        - method: get
+          url: url
+          expect:
+            - http_status_code: 200
+            - valid_json
+
+    - name: Create a post with userId 1
+      do:
         - method: post
-          dataset: ds_file_exception_code_401
-      expect:
-        - http_status_code: 200
-        - contains_dict: {'err_msg': "not a vaild number"}
+          url: url
+          test_data: jsonplaceholder_post_200
+          expect:
+          - http_status_code: 201
+          - valid_json 
 
-    - name: Update a post success - HTTP 201
+    - name: pet API Delete success - HTTP 201
       do:
+        - method: post
+          url: url
+          test_data: jsonplaceholder_post_200
+          expect:
+          - http_status_code: 201
+          - valid_json 
         - action: readfile
-          path: f"~/.ssh/known_host"
-        - method: put
-          resp: responses
-        - action: execute
-          cmd: f"ls {responses}"
-      expect:
-        - http_201
-        - valid_json
-        - contains: ['string1', 'str2']
-
-    # - name: pet API Delete success - HTTP 201
-    #   request:
-    #     method: delete
-    #     data: data_set_4
-    #   expect:
-    #     - http_201
-    #     - valid_json
-    #     - contains_text: ['deleted']
+          path: path
+        - method: post
+          url: url
+          test_data: jsonplaceholder_post_200
+          expect:
+          - http_status_code: 201
+          - valid_json 

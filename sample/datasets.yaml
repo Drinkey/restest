@@ -9,3 +9,14 @@ dev:
       - title: "test article"
         body: "test body"
         userId: 1
+qa:
+  variables:
+    ds_file_exception_code_201:
+      file_exception: abc
+    jsonplaceholder_post_200:
+      - title: "test article"
+        body: "abcdefg"
+        userId: 1
+      - title: "test article"
+        body: "test body"
+        userId: 1

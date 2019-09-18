@@ -67,7 +67,6 @@ class PytestCodeBuilder(PythonCodeBuilder):
         self.add_line(f"response = {func_name}({', '.join(param)})")
 
     def add_test_expects(self, expects: Iterable) -> None:
-        print(expects)
         for assert_stmt in expects:
             if isinstance(assert_stmt, dict):
                 for k,v in assert_stmt.items():

@@ -52,24 +52,30 @@ testsuite:
       do:
         - method: post
           url: url
-          test_data: jsonplaceholder_post_200
+          json: jsonplaceholder_post_200[0]
           expect:
           - http_status_code: 201
-          - valid_json 
+          - valid_json
+      expect:
+        - http_status_code: 201
 
     - name: pet API Delete success - HTTP 201
       do:
         - method: post
           url: url
-          test_data: jsonplaceholder_post_200
+          json: jsonplaceholder_post_200[1]
           expect:
           - http_status_code: 201
           - valid_json 
         - action: readfile
-          path: path
-        - method: post
+          path: url
+        - action: request
+          method: post
           url: url
-          test_data: jsonplaceholder_post_200
+          json: 
+            title: inline_test_title
+            body: inline test boday
+            userId: 1
           expect:
           - http_status_code: 201
           - valid_json 

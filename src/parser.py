@@ -30,6 +30,7 @@ class TestSuites:
 class TestSuite:
     def __init__(self, test_suite_file=None, env='dev', format='yaml'):
         self._test_description_file = None
+        self._test_suite_file = test_suite_file
         self._test_suite_folder = pathlib.Path(test_suite_file).resolve().parent
         if test_suite_file:
             self._test_description_file = yaml2dict(test_suite_file)
@@ -80,7 +81,9 @@ class TestSuite:
     def do_includes(self):
         for f in self.includes:
             includ_file = f"{self._test_suite_folder}/{f}"
+            # print(includ_file)
             read_content = yaml2dict(includ_file)
+            # print(read_content)
             self.variables.update(read_content[self._env]['variables'])
 
     def do_setup(self, setup):
@@ -88,6 +91,12 @@ class TestSuite:
 
     def do_teardown(self, teardown):
         pass
+    
+    def save(self):
+        pytest_source = self._test_suite_file.replace('yaml', 'py').replace('-','_')
+        with open(pytest_source, 'wb') as fp:
+            fp.write(str(self.code).encode())
+        return pytest_source
 
 
 class TestCase:
@@ -119,5 +128,8 @@ class TestCase:
             self.code.add_test_step(_action, (f"{k}={v}" for k,v in do.items()))
             if _expects:
                 self.code.add_test_expects(_expects)
+        # if self.expect:
+        #     self.code.add_for_loop()
+        #     self.code.add_test_expects(self.expect)
         self.code.dedent()
         self.code.add_blank_line()

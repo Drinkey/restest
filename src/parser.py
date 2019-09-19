@@ -2,7 +2,7 @@ import json
 from typing import List, Dict
 import pathlib
 from ruamel.yaml import YAML
-from code import PytestCodeBuilder
+from code import CodeBuilder, PytestCodeBuilder
 
 
 def yaml2dict(src):
@@ -17,37 +17,50 @@ class ParamError(Exception):
     pass
 
 class TestSuites:
-    def __init__(self, test_suite_folder, env='qa'):
-        self._test_suites = self.discover(test_suite_folder)
+    def __init__(self, test_suite_folder: str, env='qa', filetype: str='yaml',
+                 cache_dir: str='sdist'):
+        self._test_suite_folder = pathlib.Path(test_suite_folder)
+        self._env = env
+        self._filetype = filetype
+        self._cache_dir = cache_dir
 
-        if test_suite_folder:
-            self._test_suite_files = self.discover(test_suite_folder)
-        self.testsuites = [TestSuite(test_suite_file=each_file) for each_file in self._test_suite_files]
+    def _discover(self):
+        return sorted(self._test_suite_folder.glob(f'test*.{self._filetype}'))
 
-    def discover(self, folder) -> List:
-        return list()
+    def collect(self):
+        for _test_suite in self._discover():
+            _ts = TestSuite(str(_test_suite), env=self._env, 
+                                          filetype=self._filetype, 
+                                          cache_dir=self._cache_dir)
+            _ts.make()
+            _ts.save()
+        return self._test_suite_folder / self._cache_dir
+
 
 class TestSuite:
-    def __init__(self, test_suite_file=None, env='dev', format='yaml'):
-        self._test_description_file = None
-        self._test_suite_file = test_suite_file
-        self._test_suite_folder = pathlib.Path(test_suite_file).resolve().parent
-        if test_suite_file:
-            self._test_description_file = yaml2dict(test_suite_file)
+    def __init__(self, test_suite_file: str, env: str='dev', filetype: str='yaml',
+                 cache_dir: str='sdist'):
+        self._temp_pytest_output_dir = cache_dir
+        self._test_suite_file = pathlib.Path(test_suite_file).resolve()
+        self._test_suite_folder = self._test_suite_file.parent
+        
+
+        self._testsuite_object = yaml2dict(test_suite_file)
+
         self._env = env
         self.variables = dict()
 
-        self.assertions = self._test_description_file.get('assertions', None)
-        self.actions = self._test_description_file.get('actions', None)
-        self.includes = self._test_description_file.get('includes', None)
+        self.assertions = self._testsuite_object.get('assertions', None)
+        self.actions = self._testsuite_object.get('actions', None)
+        self.includes = self._testsuite_object.get('includes', None)
 
         # update included variables
         if self.includes:
             self.do_includes()
-        self._test_suite = self._test_description_file.get('testsuite', None)
+        self._test_suite = self._testsuite_object.get('testsuite', None)
 
         # update test file variables
-        self.variables.update(self._test_description_file.get('variables', {}))
+        self.variables.update(self._testsuite_object.get('variables', {}))
 
         self.description = self._test_suite.get('description', None)
         self.setup = self._test_suite['setup']
@@ -93,14 +106,30 @@ class TestSuite:
         pass
     
     def save(self):
-        pytest_source = self._test_suite_file.replace('yaml', 'py').replace('-','_')
-        with open(pytest_source, 'wb') as fp:
+        """save generate pytest code to a file
+
+        The file folder is at the save level of the yaml file
+
+        For example, if the yaml file is /x/y/z/test_001.yaml, the output pytest file should
+        be: /x/y/z/<temp_cache_dir>/test_001.py
+
+        The parameter <temp_cache_dir> can be set by cache_dir.
+        
+        :return: the file path of generated pytest file
+        :rtype: str
+        """
+        _pytest_filename = self._test_suite_file.name.replace('yaml', 'py').replace('-','_')
+        _pytest_folder = self._test_suite_folder / self._temp_pytest_output_dir
+        _pytest_folder.mkdir(parents=True, exist_ok=True)
+        _pytest_source = _pytest_folder / _pytest_filename
+
+        with _pytest_source.open('wb') as fp:
             fp.write(str(self.code).encode())
-        return pytest_source
+        return str(_pytest_source)
 
 
 class TestCase:
-    def __init__(self, testcase, code):
+    def __init__(self, testcase: Dict, code: CodeBuilder):
         self._tc = testcase
         self.name = self._to_pytest_name()
         self.do = self._tc.get('do')

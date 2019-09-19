@@ -6,12 +6,12 @@ import code
 TEMPLATE_DIR = pathlib.Path(__file__).resolve().parent.parent
 
 def test_parse_testsuite_0000_sample():
-    sample = f"{TEMPLATE_DIR}/sample/0000-test-suite-jsonplaceholder.yaml"
+    sample = f"{TEMPLATE_DIR}/sample/test-suite-00000-jsonplaceholder.yaml"
     ret = parser.yaml2dict(sample)
     print(ret)
 
 def test_test_suite_parse_init_one_param_no_exception():
-    sample = f"{TEMPLATE_DIR}/sample/0000-test-suite-jsonplaceholder.yaml"
+    sample = f"{TEMPLATE_DIR}/sample/test-suite-00000-jsonplaceholder.yaml"
     ts = parser.TestSuite(test_suite_file=sample)
     ts.make()
     print(ts.code)
@@ -39,3 +39,9 @@ def test_test_case_make():
     print(tc.code)
     assert 'def test_create_post' in str(tc.code)
     assert 'http_status_code(response, 201)' in str(tc.code)
+
+def test_test_suites_discover():
+    sample = f"{TEMPLATE_DIR}/sample"
+    tsf = parser.TestSuites(sample)
+    all_tc = tsf.discover()
+    print(all_tc)

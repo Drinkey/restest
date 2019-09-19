@@ -21,7 +21,7 @@ variables:
   post: "post"
 
 testsuite:
-  description: Test jsonplaceholder Resources CRUD
+  description: Test jsonplaceholder posts Resources CRUD
   variables:
     url: "{base_url}/posts"
   setup: 

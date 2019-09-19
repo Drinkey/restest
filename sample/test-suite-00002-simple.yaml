@@ -1,0 +1,24 @@
+assertions:
+  - http_status_code
+  - valid_json
+
+actions:
+  - request
+
+variables:
+  base_url: https://jsonplaceholder.typicode.com
+  url: "{base_url}/posts"
+  get: "get"
+  post: "post"
+
+testsuite:
+  description: Test jsonplaceholder Comment Resources CRUD
+
+  testcases:
+    - name: List all jsonplaceholder posts
+      do:
+        - method: get
+          url: url
+          expect:
+            - http_status_code: 200
+            - valid_json

@@ -21,61 +21,17 @@ variables:
   post: "post"
 
 testsuite:
-  description: Test jsonplaceholder Resources CRUD
+  description: Test jsonplaceholder Comment Resources CRUD
   variables:
-    url: "{base_url}/posts"
-  setup: 
-    - all_tokens
-  teardown:
-    - logout()
+    url: "{base_url}/comments"
 
   testcases:
-    - name: List all posts
-      do:
-        - method: get
-          url: url
-          expect:
-            - http_status_code: 200
-            - valid_json
-
-    - name: Get a post with id 1
+    - name: List all comment of post 1
       variables:
-        url: "{base_url}/posts/1"
+        comment_url: "{url}?postId=1"
       do:
         - method: get
-          url: url
+          url: comment_url
           expect:
             - http_status_code: 200
             - valid_json
-
-    - name: Create a post with userId 1
-      do:
-        - method: post
-          url: url
-          json: jsonplaceholder_post_200[0]
-          expect:
-          - http_status_code: 201
-          - valid_json
-      expect:
-        - http_status_code: 201
-
-    - name: pet API Delete success - HTTP 201
-      do:
-        - method: post
-          url: url
-          json: jsonplaceholder_post_200[1]
-          expect:
-          - http_status_code: 201
-          - valid_json 
-        - action: readfile
-          path: url
-        - action: request
-          method: post
-          url: url
-          json: 
-            title: inline_test_title
-            body: inline test boday
-            userId: 1
-          expect:
-          - http_status_code: 201
-          - valid_json 

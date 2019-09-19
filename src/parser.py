@@ -63,7 +63,7 @@ class TestSuite:
         self.variables.update(self._testsuite_object.get('variables', {}))
 
         self.description = self._test_suite.get('description', None)
-        self.setup = self._test_suite['setup']
+        self.setup = self._test_suite.get('setup', None)
         self.teardown = self._test_suite.get('teardown', None)
 
         # update test suite variables

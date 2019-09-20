@@ -63,7 +63,7 @@ class PytestCodeBuilder(PythonCodeBuilder):
     def __init__(self, indent: int=0):
         PythonCodeBuilder.__init__(self, indent)
 
-    def add_test_step(self, func_name: str, param: List) -> None:
+    def add_test_step(self, func_name: str, param: Iterable) -> None:
         self.add_line(f"response = {func_name}({', '.join(param)})")
 
     def add_test_expects(self, expects: Iterable) -> None:

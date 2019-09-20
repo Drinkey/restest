@@ -1,9 +1,11 @@
 import json
-from typing import List, Dict
 import pathlib
+from typing import List, Dict
 from ruamel.yaml import YAML
-from code import CodeBuilder, PytestCodeBuilder
 
+from restest.code import CodeBuilder, PytestCodeBuilder
+
+PKG = 'restest'
 
 def yaml2dict(src):
     ret = {}
@@ -77,8 +79,8 @@ class TestSuite:
 
     def prepare_testsuite(self):
         self.code.add_docstring(self.description)
-        self.code.add_from_import('assertions', self.assertions)
-        self.code.add_from_import('actions', self.actions)
+        self.code.add_from_import(f'{PKG}.assertions', self.assertions)
+        self.code.add_from_import(f'{PKG}.actions', self.actions)
         
         if self.variables:
             self.code.add_variables(self.variables)
@@ -129,7 +131,7 @@ class TestSuite:
 
 
 class TestCase:
-    def __init__(self, testcase: Dict, code: CodeBuilder):
+    def __init__(self, testcase: Dict, code: PytestCodeBuilder):
         self._tc = testcase
         self.name = self._to_pytest_name()
         self.do = self._tc.get('do')

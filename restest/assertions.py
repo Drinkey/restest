@@ -1,21 +1,16 @@
 import json
+
 def http_status_code(response, code):
-    try:
-        assert response.status_code == code
-    except AssertionError as err:
-        raise AssertionError(f"Expecting status code {code} == {response.status_code}")
+    assert response.status_code == code, \
+        f"Expecting status code {code} == {response.status_code}"
 
 def contains_text(response, text):
-    try:
-        assert text in response.text
-    except AssertionError as err:
-        raise AssertionError(f"Expecting {text} in {response.text}")
+    assert text in response.text, \
+        f"Expecting {text} in {response.text}"
 
 def valid_json(response):
-    try:
-        json.loads(response.text)
-    except ValueError as err:
-        raise AssertionError(f"Expecting {response.json()} is a JSON")
+    json.loads(response.text), \
+        f"Expecting {response.json()} is a JSON"
 
 def contains_field(response):
     pass

@@ -2,16 +2,22 @@
 import pathlib
 import argparse
 import pytest
-from parser import TestSuite, TestSuites
+from restest.parser import TestSuite, TestSuites
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--environment", default='qa', help="environment")
-    parser.add_argument("test_suite")
+    parser.add_argument(
+        "-e",
+        "--environment",
+        default='qa',
+        help="Specify which environment to use"
+    )
+    parser.add_argument(
+        "test_suite",
+        help="Test Suite File or Test Suite folder"
+    )
     args = parser.parse_args()
     ts_path = pathlib.Path(args.test_suite)
-    print(ts_path)
-    print(ts_path.is_dir())
     pytest_run = ''
     if ts_path.is_file():
         ts = TestSuite(args.test_suite, env=args.environment)

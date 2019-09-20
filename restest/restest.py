@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 import pathlib
+import argparse
 import pytest
 from parser import TestSuite, TestSuites
 
-def main(args):
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", "--environment", default='qa', help="environment")
+    parser.add_argument("test_suite")
+    args = parser.parse_args()
     ts_path = pathlib.Path(args.test_suite)
     print(ts_path)
     print(ts_path.is_dir())
@@ -20,3 +25,6 @@ def main(args):
     print(pytest_run)
     pytest_args = f"-s -vv {pytest_run}"
     pytest.main(pytest_args.split())
+
+if __name__ == "__main__":
+    main()

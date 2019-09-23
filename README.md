@@ -2,6 +2,18 @@
 
 Simple RESTFul API Test Framework for learning, reinventing wheels (don't do it)
 
+---
+Table of Contents
+- [restest](#restest)
+  - [Environment](#environment)
+  - [Install](#install)
+  - [Writing a test case](#writing-a-test-case)
+    - [Assertions](#assertions)
+    - [Actions](#actions)
+    - [Variables](#variables)
+    - [Test Suite](#test-suite)
+  - [Command Line Usage](#command-line-usage)
+  - [Development](#development)
 ## Environment
 
 - Python 3.6.5
@@ -26,7 +38,148 @@ $ pip install git+https://github.com/Drinkey/restest.git
 ...
 ```
 
-## Usage
+## Writing a test case
+
+Here is a simple test suite file to describe a test case
+
+```yaml
+assertions:
+  - http_status_code
+  - valid_json
+
+actions:
+  - request
+
+variables:
+  base_url: https://jsonplaceholder.typicode.com
+  url: "{base_url}/posts"
+  get: "get"
+  post: "post"
+
+testsuite:
+  description: Test jsonplaceholder Comment Resources CRUD
+
+  testcases:
+    - name: List all jsonplaceholder posts
+      do:
+        - method: get
+          url: url
+          expect:
+            - http_status_code: 200
+            - valid_json
+```
+
+Our program will convert it to a pytest script like following and run it by pytest
+
+```python
+"""Test jsonplaceholder Comment Resources CRUD
+"""
+from assertions import http_status_code, valid_json
+
+from actions import request
+
+base_url = 'https://jsonplaceholder.typicode.com'
+url = f'{base_url}/posts'
+get = 'get'
+post = 'post'
+
+def test_list_all_jsonplaceholder_posts():
+    response = request(method=get, url=url)
+    http_status_code(response, 200)
+    valid_json(response)
+```
+
+Let's break it down into pieces
+
+### Assertions
+
+Assertions is a list of functions that you want to include for doing result validation in the current test suite. When validation failed, `AssertionError` will be raised.
+
+Assertion functions can be found in `restest/assertions.py`, and you can also add your own assertion functions by adding functions to this file.
+
+Right now, we only provide 3 assertion functions:
+- `http_status_code`
+- `contains_text`
+- `valid_json`
+
+They all take the `response` as the first parameter, and when calling them in the `expect` section of a test case, the key is defining which assertion to call, and value is what is the second parameter of assertion functions.
+
+For example, we have a assertion function `http_status_code` 
+```python
+def http_status_code(response, code):
+    assert response.status_code == code, \
+        f"Expecting status code {code} == {response.status_code}"
+```
+
+After we include it in this test suite file, 
+
+```yaml
+assertions:
+  - http_status_code
+  - valid_json
+```
+
+we can call it in test case `expect` section
+
+```yaml
+    - name: List all jsonplaceholder posts
+      do:
+        - method: get
+          url: url
+          expect:
+            - http_status_code: 200
+            - valid_json
+```
+
+The `expect` is specifying a list of validation. Each validation is a `dict` or `str`. When the validation is a dict, the key is validation function to call, and the value is the parameter we want to pass. If the validation is a `str`, it's the validation function we want to call. The parameter `response` will be passed by default no matter the validation is a `dict` or a `str`.
+
+In this case, we have called 2 validation, one is `http_status_code` to check whether response status code is 200. If the validation fails, `AssertionError` will be raised. And another is `valid_json` to validate the response is a valid JSON. If the response is not a valid JSON, `AssertionError` will be raised.
+
+### Actions
+
+Actions is a list of test functions you want to run, for example, send a HTTP request, send out a TCP packet, creating a test file, etc. Actions function can be found in `restest/actions.py`
+
+```yaml
+actions:
+  - request
+```
+This means to import `request` (without `s`) to this test suite which will be called in the test cases.
+
+In the test case section, `do` is a list of operations to run a test step and validate result.
+```yaml
+      do:
+        - method: get
+          url: url
+          expect:
+            - http_status_code: 200
+            - valid_json
+```
+
+In the above example, we just specified `method`, `url` and `expect`. We didn't specify any `action`. That is because we have a hidden rule. If there is no action specified in the test case, we consider the action is `request` by default. And except `action` and `expect`, others will treat as parameters of `action`. 
+
+So, in this case, the case will be translated to following Python code.
+
+```python
+response = request(method=get, url=url)
+http_status_code(response, 200)
+valid_json(response)
+```
+
+
+### Variables
+
+You can define several variables and refer their values
+
+```yaml
+base_url = 'https://jsonplaceholder.typicode.com'
+url = f'{base_url}/posts'
+```
+
+### Test Suite
+
+For more information, please refer to test suites under `sample/`
+
+## Command Line Usage
 
 See `restest` help
 

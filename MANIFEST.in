@@ -1,0 +1,6 @@
+recursive-include restest/*
+recursive-include sample/*
+recursive-include tests/*
+include README.MD
+include requirements.txt
+include setup.py

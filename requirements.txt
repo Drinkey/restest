@@ -27,7 +27,6 @@ pylint==2.5.2
 pytest-cov==2.8.1
 pytest-profiling==1.7.0
 pytest-rerunfailures==9.0
-pytest==5.4.2
 python-docx==0.8.10
 pytz==2019.3
 pyvmomi==7.0

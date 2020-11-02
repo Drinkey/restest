@@ -10,7 +10,7 @@ XlsxWriter==1.2.8
 allure-pytest==2.8.15
 arrow==0.15.6
 bs4==0.0.1
-cryptography==2.8
+cryptography==3.2
 dictdiffer==0.8.1
 google-api-python-client==1.8.3
 google-auth-oauthlib==0.4.1

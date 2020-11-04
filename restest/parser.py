@@ -3,7 +3,7 @@ import pathlib
 from typing import List, Dict
 from ruamel.yaml import YAML
 
-from restest.code import CodeBuilder, PytestCodeBuilder
+from restest.code import PytestCodeBuilder
 
 PKG = 'restest'
 
@@ -159,8 +159,6 @@ class TestCase:
             self.code.add_test_step(_action, (f"{k}={v}" for k,v in do.items()))
             if _expects:
                 self.code.add_test_expects(_expects)
-        # if self.expect:
-        #     self.code.add_for_loop()
-        #     self.code.add_test_expects(self.expect)
+
         self.code.dedent()
         self.code.add_blank_line()
